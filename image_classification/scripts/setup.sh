@@ -10,9 +10,9 @@ cd ../datasets
 # python3 create_dataset.py -d imagewoof -p 30 -s 1
 # python3 create_dataset.py -d imagewoof -p 40 -s 1
 
-# python3 create_dataset.py -d cifar10 -p 10 -s 1
-# python3 create_dataset.py -d cifar10 -p 20 -s 1
-# python3 create_dataset.py -d cifar10 -p 30 -s 1
+python3 create_dataset.py -d cifar10 -p 10 -s 1
+python3 create_dataset.py -d cifar10 -p 20 -s 1
+python3 create_dataset.py -d cifar10 -p 30 -s 1
 python3 create_dataset.py -d cifar10 -p 40 -s 1
 
 # mkdir -p ~/.fastai/data/imagenette/models
