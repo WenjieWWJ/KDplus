@@ -9,8 +9,9 @@ from image_classification.arguments import get_args
 from image_classification.datasets.dataset import get_dataset
 from image_classification.utils.utils import *
 from image_classification.models.custom_resnet import *
-from trainer import *
-
+from image_classification.models.custom_resnet import BasicBlock
+from kd_trainer import KDTrainer
+from kd.quartizer import Quartizer
 
 args = get_args(description='No Teacher', mode='train')
 expt = 'no-teacher'
@@ -52,22 +53,32 @@ optimizer = torch.optim.Adam(net.parameters(), lr=hyper_params["learning_rate"])
 loss_function = nn.CrossEntropyLoss()
 savename = get_savename(hyper_params, experiment=expt)
 best_val_acc = 0
-for epoch in range(hyper_params['num_epochs']):
-    student, train_loss, val_loss, val_acc, best_val_acc = train(
-                                                                net,
-                                                                teacher=None,
-                                                                data=data,
-                                                                sf_teacher=None,
-                                                                sf_student=None,
-                                                                loss_function=loss_function,
-                                                                loss_function2=None,
-                                                                optimizer=optimizer,
-                                                                hyper_params=hyper_params,
-                                                                epoch=epoch,
-                                                                savename=savename,
-                                                                best_val_acc=best_val_acc
-                                                                )
-    if args.api_key:
-        experiment.log_metric("train_loss", train_loss)
-        experiment.log_metric("val_loss", val_loss)
-        experiment.log_metric("val_acc", val_acc * 100)
+
+# refactor it to a trainer 
+trainer = KDTrainer(net,
+                    teacher=None,
+                    data=data,
+                    sf_teacher=None,
+                    sf_student=None,
+                    loss_function=loss_function,
+                    loss_function2=None,
+                    optimizer=optimizer,
+                    hyper_params=hyper_params,
+                    epoch=hyper_params['num_epochs'],
+                    savename=savename,
+                    best_val_acc=best_val_acc)
+student, train_loss, val_loss, val_acc, best_val_acc = trainer.train()
+if args.api_key:
+    experiment.log_metric("train_loss", train_loss)
+    experiment.log_metric("val_loss", val_loss)
+    experiment.log_metric("val_acc", val_acc * 100)
+
+
+# ======= Below are customized KD & DC code ==========
+net.eval()
+val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
+print(f"original net, val_loss: {val_loss}, val_acc: {val_acc} ")
+qtz = Quartizer()
+quartized_net = qtz.apply(net)
+val_loss, val_acc = trainer.eval_model(model=quartized_net, quartized=True)
+print(f"quartized net, val_loss: {val_loss}, val_acc: {val_acc}")
