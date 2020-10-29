@@ -3,7 +3,7 @@ import torch.quantization as quantization
 import torch 
 from kd import kd_util 
 from image_classification.models.custom_resnet import BasicBlock
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans      # edited by yujie
 
 class Quartizer(BaseKDOp):
 
@@ -30,7 +30,8 @@ class Quartizer(BaseKDOp):
                 quantization.fuse_modules(m[0], [['conv1', 'bn1', 'relu'],['conv2','bn2']], inplace=inplace)
         return net
  
-def apply_weight_sharing(model, bits=5):
+# edited by yujie
+def apply_weight_sharing(model, bits=5):    
 
     for name, parameter in model.named_parameters():
         if 'conv' in name or 'fc.weight' in name or 'fc2.weight' in name:
