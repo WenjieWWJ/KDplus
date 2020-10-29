@@ -3,6 +3,7 @@ import torch.quantization as quantization
 import torch 
 from kd import kd_util 
 from image_classification.models.custom_resnet import BasicBlock
+from sklearn.cluster import KMeans
 
 class Quartizer(BaseKDOp):
 
@@ -28,3 +29,24 @@ class Quartizer(BaseKDOp):
             if type(m) == torch.nn.Sequential and type(m[0]) == BasicBlock:
                 quantization.fuse_modules(m[0], [['conv1', 'bn1', 'relu'],['conv2','bn2']], inplace=inplace)
         return net
+ 
+def apply_weight_sharing(model, bits=5):
+
+    for name, parameter in model.named_parameters():
+        if 'conv' in name or 'fc.weight' in name or 'fc2.weight' in name:
+            print('name:', name)
+            print('parameters:', parameter.size())
+            dev = parameter.device
+            weight = parameter.data.cpu().numpy()
+            shape = weight.shape
+            print('shape:', shape)
+            weight_scope = weight.reshape(-1)
+            min_ = min(weight_scope)
+            max_ = max(weight_scope)
+            space = np.linspace(min_, max_, num=2**bits)
+            kmeans = KMeans(n_clusters=len(space), init=space.reshape(-1,1), n_init=1, precompute_distances=True, algorithm="full")
+            kmeans.fit(weight.reshape(-1,1))
+            new_weight = kmeans.cluster_centers_[kmeans.labels_].reshape(-1)
+            weight.data = new_weight
+            parameter.data = torch.from_numpy(weight).to(dev)
+   
