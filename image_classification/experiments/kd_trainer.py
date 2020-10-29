@@ -96,7 +96,7 @@ class KDTrainer:
                 loss.backward()
                 self.optimizer.step()
 
-                loop.set_description('Epoch {}/{}'.format(epoch + 1, self.hyper_params['num_epochs']))
+                loop.set_description('Epoch {}/{}'.format(epoch + 1, self.num_epoch))         # edited by yujie
                 loop.set_postfix(loss=loss.item())
 
             train_loss = (sum(trn) / len(trn))
@@ -205,18 +205,20 @@ class KDTrainer:
                 else:
                     images = torch.autograd.Variable(images).float()
                     labels = torch.autograd.Variable(labels)
-                
-            if quartized:
-                images = images.to('cpu')
-                torch.quantize_per_tensor(images, scale=1e-3, zero_point=128,dtype=torch.quint8)
+                    
+                # edited by yujie
+                if quartized:
+                    images = images.to('cpu')
+                    torch.quantize_per_tensor(images, scale=1e-3, zero_point=128,dtype=torch.quint8)
 
-            y_pred = model(images)
-            loss = self.loss_function(y_pred, labels)
-            y_pred = F.log_softmax(y_pred, dim = 1)
-            _, pred_ind = torch.max(y_pred, 1)
-            total += labels.size(0)
-            correct += (pred_ind == labels).sum().item()
-            val.append(loss.item())
+                y_pred = model(images)
+                loss = self.loss_function(y_pred, labels)
+                y_pred = F.log_softmax(y_pred, dim = 1)
+                _, pred_ind = torch.max(y_pred, 1)
+                total += labels.size(0)
+                correct += (pred_ind == labels).sum().item()
+                val.append(loss.item())
+                
             val_loss = (sum(val) / len(val))
             if total > 0:
                 val_acc = correct / total
