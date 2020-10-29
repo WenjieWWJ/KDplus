@@ -9,12 +9,17 @@ from image_classification.arguments import get_args
 from image_classification.datasets.dataset import get_dataset
 from image_classification.utils.utils import *
 from image_classification.models.custom_resnet import *
-from trainer import *
+from kd_trainer import KDTrainer
+from kd.quartizer import *
+import random
 
 args = get_args(description='Hinton KD', mode='train')
 expt = 'hinton-kd'
 
+random.seed(args.seed)  # random and transforms
+torch.backends.cudnn.deterministic=True  # cudnn
 torch.manual_seed(args.seed)
+
 if args.gpu != 'cpu':
     args.gpu = int(args.gpu)
     torch.cuda.set_device(args.gpu)
@@ -60,23 +65,51 @@ optimizer = torch.optim.SGD(net.parameters(), lr=hyper_params["learning_rate"], 
 
 loss_function = nn.KLDivLoss(reduction='mean')
 loss_function2 = nn.CrossEntropyLoss()
-best_val_loss = 100
-for epoch in range(hyper_params["num_epochs"]):
-    net, train_loss, val_loss, _, best_val_loss = train(net,
-                                                        teacher,
-                                                        data,
-                                                        sf_teacher,
-                                                        sf_student,
-                                                        loss_function,
-                                                        loss_function2,
-                                                        optimizer=optimizer,
-                                                        hyper_params=hyper_params,
-                                                        epoch=epoch,
-                                                        savename=savename,
-                                                        best_val_acc=best_val_loss,
-                                                        expt=expt
-                                                        )
-    if args.api_key:
-        experiment.log_metric("train_loss", train_loss)
-        experiment.log_metric("val_loss", val_loss)
+best_val_loss = 0  # edited by yujie
 
+# refactor it to a trainer 
+trainer = KDTrainer(net,
+                    teacher,
+                    data,
+                    sf_teacher,
+                    sf_student,
+                    loss_function,
+                    loss_function2,
+                    optimizer=optimizer,
+                    hyper_params=hyper_params,
+                    epoch=hyper_params['num_epochs'],
+                    savename=savename,
+                    best_val_acc=best_val_acc)
+net, train_loss, val_loss, val_acc, best_val_acc = trainer.train()
+
+if args.api_key:
+    experiment.log_metric("train_loss", train_loss)
+    experiment.log_metric("val_loss", val_loss)
+    experiment.log_metric("val_acc", val_acc * 100)
+
+# ======= Below are customized KD & DC code ==========
+net.eval()
+val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
+print(f"original net_0, val_loss: {val_loss}, val_acc: {val_acc} ")
+
+apply_weight_sharing(net, bits=5)
+val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
+print(f"net_1 after weight sharing, val_loss: {val_loss}, val_acc: {val_acc}")
+
+trainer_after_weightSharing = KDTrainer(net,
+                                        teacher=None,
+                                        data=data,
+                                        sf_teacher=None,
+                                        sf_student=None,
+                                        loss_function=loss_function,
+                                        loss_function2=None,
+                                        optimizer=optimizer,
+                                        hyper_params=hyper_params,
+                                        epoch=30,
+                                        savename=savename,
+                                        best_val_acc=best_val_acc)
+net, train_loss, val_loss, val_acc, best_val_acc = trainer_after_weightSharing.train()
+
+net.eval()
+val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
+print(f"net_2 after retraining net_1, val_loss: {val_loss}, val_acc: {val_acc} ")
