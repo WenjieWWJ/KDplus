@@ -65,7 +65,7 @@ optimizer = torch.optim.SGD(net.parameters(), lr=hyper_params["learning_rate"], 
 
 loss_function = nn.KLDivLoss(reduction='mean')
 loss_function2 = nn.CrossEntropyLoss()
-best_val_loss = 0  # edited by yujie
+best_val_loss = 100
 
 # refactor it to a trainer 
 trainer = KDTrainer(net,
@@ -96,6 +96,9 @@ apply_weight_sharing(net, bits=5)
 val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
 print(f"net_1 after weight sharing, val_loss: {val_loss}, val_acc: {val_acc}")
 
+
+loss_function = nn.CrossEntropyLoss()
+best_val_acc = 0  
 trainer_after_weightSharing = KDTrainer(net,
                                         teacher=None,
                                         data=data,
