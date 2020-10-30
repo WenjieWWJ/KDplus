@@ -212,7 +212,7 @@ class KDTrainer:
                     torch.quantize_per_tensor(images, scale=1e-3, zero_point=128,dtype=torch.quint8)
 
                 y_pred = model(images)
-                loss = self.loss_function(y_pred, labels)
+                loss = nn.CrossEntropyLoss(y_pred, labels)    # edited by yujie
                 y_pred = F.log_softmax(y_pred, dim = 1)
                 _, pred_ind = torch.max(y_pred, 1)
                 total += labels.size(0)
