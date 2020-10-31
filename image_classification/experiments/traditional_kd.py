@@ -103,7 +103,7 @@ for stage in range(2):
                             data=data,
                             sf_teacher=None,
                             sf_student=None,
-                            loss_function,
+                            loss_function=loss_function,
                             loss_function2=None,
                             optimizer=optimizer,
                             hyper_params=hyper_params,
