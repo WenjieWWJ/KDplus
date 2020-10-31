@@ -144,7 +144,7 @@ class KDTrainer:
 
                 # stage training
                 elif self.loss_function2 is None:
-                    if expt == 'fsp-kd':
+                    if self.expt == 'fsp-kd':   
                         loss = 0
                         # 4 intermediate feature maps and taken 2 at a time (thus 3)
                         for k in range(3):
