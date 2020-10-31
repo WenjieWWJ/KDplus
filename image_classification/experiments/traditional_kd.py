@@ -74,7 +74,7 @@ for stage in range(2):
     
     if hyper_params['stage'] != 1:
         loss_function = nn.MSELoss()
-        best_val_loss = 100   
+        best_val_acc = 100   
         # refactor it to a trainer 
         trainer = KDTrainer(net,
                             teacher,
