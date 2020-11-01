@@ -5,8 +5,8 @@ def get_args(description, mode='train'):
     parser = argparse.ArgumentParser(description = description)
     parser.add_argument('-s', '--seed', type=int, help = 'Give random seed')
     parser.add_argument('-d', '--dataset', choices = ['imagenette', 'imagewoof', 'cifar10'], help = 'Give the dataset name from the choices')
-    parser.add_argument('-p_prune', '--prune_percentage', type=float, help='Percentage of pruned parameters', default=0.2)
-    parser.add_argument('-b_ws', '--bits_weight_sharing', type=int, help='bits of weight sharing', default=5)
+    parser.add_argument('-p_prune', '--prune_percentage', type=float, help='Percentage of pruned parameters', default=None)
+    parser.add_argument('-b_ws', '--bits_weight_sharing', type=int, help='bits of weight sharing', default=None)
 
     if mode == 'train':
         parser.add_argument('-m', '--model', choices = ['resnet10', 'resnet14', 'resnet18', 'resnet20', 'resnet26'], help = 'Give the model name from the choices')

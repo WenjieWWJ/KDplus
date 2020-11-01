@@ -85,6 +85,7 @@ class KDTrainer:
                     loss /= 5
                 # 2 loss functions and student and teacher are given -> simultaneous training
                 else:
+#                     labels = labels.float()
                     loss = self.loss_function(y_pred, labels)
                     for k in range(5):
                         loss += self.loss_function2(self.sf_student[k].features, self.sf_teacher[k].features)
@@ -172,8 +173,9 @@ class KDTrainer:
                             loss += self.loss_function(fsp_matrix(self.sf_teacher[k].features, self.sf_teacher[k + 1].features),
                                                 fsp_matrix(self.sf_student[k].features, self.sf_student[k + 1].features))
                         loss /= 3
-                    else:
+                    else: # traditional KD
                         loss = self.loss_function(self.sf_student[self.hyper_params['stage']].features, self.sf_teacher[self.hyper_params['stage']].features)
+                        
                 # simultaneous training or attention KD
                 else:
                     loss = self.loss_function(y_pred, labels)
@@ -198,13 +200,13 @@ class KDTrainer:
                 print(f'higher valid acc obtained: {val_acc * 100}')
                 max_val_acc = val_acc * 100
                 torch.save(self.student.state_dict(), self.savename)
-        # stage training
+        # traditional KD, stage training
         elif self.loss_function2 is None:
             if val_loss < max_val_acc :
                 print(f'lower valid loss obtained: {val_loss}')
                 max_val_acc = val_loss
                 torch.save(self.student.state_dict(), self.savename)
-        # simultaneous training or attention kd
+        # hinton_kd, simultaneous training or attention kd
         else:
             if (val_acc * 100) > max_val_acc :
                 print(f'higher valid acc obtained: {val_acc * 100}')

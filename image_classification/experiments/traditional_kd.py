@@ -16,6 +16,7 @@ import random
 
 args = get_args(description='Traditional KD', mode='train')
 expt = 'traditional-kd'
+print(args)
 
 random.seed(args.seed)  # random and transforms
 torch.backends.cudnn.deterministic=True  # cudnn
@@ -36,7 +37,9 @@ hyper_params = {
     "learning_rate": 1e-4,
     "seed": args.seed,
     "percentage":args.percentage,
-    "gpu": args.gpu
+    "gpu": args.gpu,
+    "p_prune": args.prune_percentage,
+    "bits": args.bits_weight_sharing   
 }
 
 data = get_dataset(dataset=hyper_params['dataset'],
@@ -74,7 +77,7 @@ for stage in range(2):
     
     if hyper_params['stage'] != 1:
         loss_function = nn.MSELoss()
-        best_val_acc = 100   
+        best_val_acc = 100
         # refactor it to a trainer 
         trainer = KDTrainer(net,
                             teacher,
@@ -118,30 +121,34 @@ for stage in range(2):
             experiment.log_metric("val_acc", val_acc * 100)
 
 # ======= Below are customized KD & DC code ==========
+net.load_state_dict(torch.load(savename))
 net.eval()
 val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
 print(f"original net_0, val_loss: {val_loss}, val_acc: {val_acc} ")
 
-apply_weight_sharing(net, bits=5)
-val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
-print(f"net_1 after weight sharing, val_loss: {val_loss}, val_acc: {val_acc}")
+# apply_weight_sharing(net, bits=5)
+# val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
+# print(f"net_1 after weight sharing, val_loss: {val_loss}, val_acc: {val_acc}")
 
-loss_function = nn.CrossEntropyLoss()
-best_val_acc = 0  
-trainer_after_weightSharing = KDTrainer(net,
-                                        teacher=None,
-                                        data=data,
-                                        sf_teacher=None,
-                                        sf_student=None,
-                                        loss_function=loss_function,
-                                        loss_function2=None,
-                                        optimizer=optimizer,
-                                        hyper_params=hyper_params,
-                                        epoch=30,
-                                        savename=savename,
-                                        best_val_acc=best_val_acc)
-net, train_loss, val_loss, val_acc, best_val_acc = trainer_after_weightSharing.train()
+# loss_function = nn.CrossEntropyLoss()
+# best_val_acc = 0  
+# trainer_after_weightSharing = KDTrainer(net,
+#                                         teacher=None,
+#                                         data=data,
+#                                         sf_teacher=None,
+#                                         sf_student=None,
+#                                         loss_function=loss_function,
+#                                         loss_function2=None,
+#                                         optimizer=optimizer,
+#                                         hyper_params=hyper_params,
+#                                         epoch=hyper_params['num_epochs'],
+#                                         savename=savename,
+#                                         best_val_acc=best_val_acc)
+# net, train_loss, val_loss, val_acc, best_val_acc = trainer_after_weightSharing.train()
 
-net.eval()
-val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
-print(f"net_2 after retraining net_1, val_loss: {val_loss}, val_acc: {val_acc} ")
+
+# net.load_state_dict(torch.load(savename))
+
+# net.eval()
+# val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
+# print(f"net_2 after retraining net_1, val_loss: {val_loss}, val_acc: {val_acc} ")

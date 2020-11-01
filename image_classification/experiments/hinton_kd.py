@@ -15,7 +15,7 @@ import random
 
 args = get_args(description='Hinton KD', mode='train')
 expt = 'hinton-kd'
-
+print(args)
 random.seed(args.seed)  # random and transforms
 torch.backends.cudnn.deterministic=True  # cudnn
 torch.manual_seed(args.seed)
@@ -39,7 +39,9 @@ hyper_params = {
     "temperature" : 20,
     "alpha" : 0.2,
     "weight_decay": 5e-4,
-    "stage":0
+    "stage":0,
+    "p_prune": args.prune_percentage,
+    "bits": args.bits_weight_sharing  
 }
 
 data = get_dataset(dataset=hyper_params['dataset'],
@@ -66,7 +68,7 @@ optimizer = torch.optim.SGD(net.parameters(), lr=hyper_params["learning_rate"], 
 loss_function = nn.KLDivLoss(reduction='mean')
 loss_function2 = nn.CrossEntropyLoss()
 best_val_loss = 100
-
+best_val_acc = 0
 # refactor it to a trainer 
 trainer = KDTrainer(net,
                     teacher,
@@ -88,6 +90,7 @@ if args.api_key:
     experiment.log_metric("val_acc", val_acc * 100)
 
 # ======= Below are customized KD & DC code ==========
+net.load_state_dict(torch.load(savename))
 net.eval()
 val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
 print(f"original net_0, val_loss: {val_loss}, val_acc: {val_acc} ")
@@ -112,6 +115,7 @@ trainer_after_weightSharing = KDTrainer(net,
                                         savename=savename,
                                         best_val_acc=best_val_acc)
 net, train_loss, val_loss, val_acc, best_val_acc = trainer_after_weightSharing.train()
+net.load_state_dict(torch.load(savename))
 
 net.eval()
 val_loss, val_acc = trainer.eval_model(model=net, quartized=False)

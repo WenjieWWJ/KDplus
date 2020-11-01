@@ -1,1 +1,1 @@
-nohup python3 -u no_teacher.py -d cifar10 -m resnet10 -e 100 -s 0 -g 2 -p_prune 0.2 > ./exp_logs/no_teacher_resnet10_pruning0.2.log 2>&1 &
+nohup python3 -u traditional_kd.py -d cifar10 -m resnet14 -e 100 -s 0 -g 3  > ./exp_logs/traditional_kd_resnet14.log 2>&1 &

@@ -87,7 +87,7 @@ def get_savename(hyper_params, experiment):
 
     savename = f"{new}saved_models/{hyper_params['dataset']}/{dsize}/{experiment}/{hyper_params['model']}{stage}"
     os.makedirs(savename, exist_ok=True)
-    return f"{savename}/model{str(hyper_params['seed'])}.pt"
+    return f"{savename}/model_{str(hyper_params['p_prune'])}Prune_{str(hyper_params['bits'])}bits_{str(hyper_params['seed'])}.pt"
 
 
 def get_model(model_name, dataset, data=None, teach=False):

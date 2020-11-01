@@ -38,7 +38,9 @@ hyper_params = {
     "learning_rate": 1e-4,
     "seed": args.seed,
     "percentage":args.percentage,
-    "gpu": args.gpu
+    "gpu": args.gpu,
+    "p_prune": args.prune_percentage,
+    "bits": args.bits_weight_sharing   
 }
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
@@ -81,47 +83,50 @@ if args.api_key:
 
 
 # ======= Below are customized KD & DC code ==========
+# reload the best model
+net.load_state_dict(torch.load(savename))
 net.eval()
 val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
 print(f"original net_0, val_loss: {val_loss}, val_acc: {val_acc} ")
 
-### Quartizer by fengbin
-# qtz = Quartizer()
-# quartized_net = qtz.apply(net)
-# val_loss, val_acc = trainer.eval_model(model=quartized_net, quartized=True)
+# ### Quartizer by fengbin
+# # qtz = Quartizer()
+# # quartized_net = qtz.apply(net)
+# # val_loss, val_acc = trainer.eval_model(model=quartized_net, quartized=True)
 
-### weight sharing by yujie
-# apply_weight_sharing(net, bits=args.bits_weight_sharing)
+# ### weight sharing by yujie
+# # apply_weight_sharing(net, bits=args.bits_weight_sharing)
 
-### pruning by wenjie
-apply_pruning(net, prune_ratio=args.prune_percentage)
-kd_util.print_nonzeros(model)
+# ### pruning by wenjie
+# apply_pruning(net, prune_ratio=args.prune_percentage)
+# kd_util.print_nonzeros(net)
 
-val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
-print(f"net_1 after weight sharing, val_loss: {val_loss}, val_acc: {val_acc}")
+# val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
+# print(f"net_1 after opt, val_loss: {val_loss}, val_acc: {val_acc}")
 
 
-loss_function = nn.CrossEntropyLoss()
-best_val_acc = 0  
-new_trainer = KDTrainer(net,
-                        teacher=None,
-                        data=data,
-                        sf_teacher=None,
-                        sf_student=None,
-                        loss_function=loss_function,
-                        loss_function2=None,
-                        optimizer=optimizer,
-                        hyper_params=hyper_params,
-                        epoch=30,
-                        savename=savename,
-                        best_val_acc=best_val_acc,
-                        pruning=True) # set pruning as True to prune the gradients during optimization
-# !!! change pruning to false if it is not pruning task
-net, train_loss, val_loss, val_acc, best_val_acc = new_trainer.train()
+# loss_function = nn.CrossEntropyLoss()
+# best_val_acc = 0  
+# new_trainer = KDTrainer(net,
+#                         teacher=None,
+#                         data=data,
+#                         sf_teacher=None,
+#                         sf_student=None,
+#                         loss_function=loss_function,
+#                         loss_function2=None,
+#                         optimizer=optimizer,
+#                         hyper_params=hyper_params,
+#                         epoch=hyper_params['num_epochs'],
+#                         savename=savename,
+#                         best_val_acc=best_val_acc,
+#                         pruning=True) # set pruning as True to prune the gradients during optimization
+# # !!! change pruning to false if it is not pruning task
+# net, train_loss, val_loss, val_acc, best_val_acc = new_trainer.train()
 
-### added by wenjie for check pruning
-kd_util.print_nonzeros(net)
+# ### added by wenjie for check pruning
+# kd_util.print_nonzeros(net)
 
-net.eval()
-val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
-print(f"net_2 after retraining net_1, val_loss: {val_loss}, val_acc: {val_acc} ")
+# net.load_state_dict(torch.load(savename))
+# net.eval()
+# val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
+# print(f"net_2 after retraining net_1, val_loss: {val_loss}, val_acc: {val_acc} ")
