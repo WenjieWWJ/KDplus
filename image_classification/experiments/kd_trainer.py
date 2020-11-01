@@ -10,7 +10,7 @@ from image_classification.utils.utils import *
 
 class KDTrainer:
 
-    def __init__(self, student, teacher, data, sf_teacher, sf_student, loss_function, loss_function2, optimizer, hyper_params, epoch, savename, best_val_acc, expt=None):
+    def __init__(self, student, teacher, data, sf_teacher, sf_student, loss_function, loss_function2, optimizer, hyper_params, epoch, savename, best_val_acc, pruning=False, expt=None):
         self.student = student 
         self.teacher =  teacher
         self.data = data
@@ -25,6 +25,7 @@ class KDTrainer:
         self.num_epoch = epoch
         self.savename = savename
         self.best_val_acc = best_val_acc
+        self.pruning = pruning
         self.expt = expt
 
     def train(self):
@@ -94,8 +95,28 @@ class KDTrainer:
 
                 self.optimizer.zero_grad()
                 loss.backward()
+                
+                ### added by wenjie for pruning the gradients
+                tensor_orig = {} 
+                if self.pruning:
+                    # zero-out all the gradients corresponding to the pruned connections
+                    for name, p in self.student.named_parameters():
+                        tensor = p.data.cpu().numpy()
+                        tensor_orig[name] = tensor
+                        grad_tensor = p.grad.data.cpu().numpy()
+                        grad_tensor = np.where(tensor==0, 0, grad_tensor)
+                        p.grad.data = torch.from_numpy(grad_tensor).to(gpu)
+                                                
                 self.optimizer.step()
-
+                
+                # for opts like adam, weights are still updated even if gradients are zeros. 
+                # so prune weights at each update.
+                if self.pruning:
+                    for name, p in self.student.named_parameters():
+                        tensor = p.data.cpu().numpy()
+                        data_tensor = np.where(tensor_orig[name]==0, 0, tensor)
+                        p.data = torch.from_numpy(data_tensor).to(gpu)
+                
                 loop.set_description('Epoch {}/{}'.format(epoch + 1, self.num_epoch))         # edited by yujie
                 loop.set_postfix(loss=loss.item())
 

@@ -1,9 +1,11 @@
 from kd.operator import BaseKDOp
 import torch.quantization as quantization
 import torch 
+import numpy as np
 from kd import kd_util 
 from image_classification.models.custom_resnet import BasicBlock
 from sklearn.cluster import KMeans      # edited by yujie
+import torch.nn.utils.prune as prune
 
 class Quartizer(BaseKDOp):
 
@@ -51,3 +53,27 @@ def apply_weight_sharing(model, bits=5):
             weight.data = new_weight
             parameter.data = torch.from_numpy(weight).to(dev)
    
+# edited by wenjie
+def apply_pruning(model, prune_ratio):
+    
+    # for now, we only prune the weights of fc, conv, bn, and downsample layers. (no pruning for bias)
+    parameters_to_prune = tuple([(module, 'weight') for name, module in model.named_modules() if kd_util.check_name_prune(name)])
+
+    kd_util.print_model_parameters(model)
+#     print(parameters_to_prune)
+    
+    prune.global_unstructured(
+        parameters_to_prune,
+        pruning_method=prune.L1Unstructured,
+        amount=prune_ratio,
+    )
+    # assign the pruned weight with zero permanently
+    for module, name in parameters_to_prune:
+        prune.remove(module, name)
+    
+    
+    
+    
+    
+    
+    

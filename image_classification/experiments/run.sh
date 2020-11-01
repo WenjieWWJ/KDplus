@@ -1,0 +1,1 @@
+nohup python3 -u no_teacher.py -d cifar10 -m resnet10 -e 100 -s 0 -g 2 -p_prune 0.2 > ./exp_logs/no_teacher_resnet10_pruning0.2.log 2>&1 &
