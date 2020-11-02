@@ -81,7 +81,8 @@ trainer = KDTrainer(net,
                     hyper_params=hyper_params,
                     epoch=hyper_params['num_epochs'],
                     savename=savename,
-                    best_val_acc=best_val_acc)
+                    best_val_acc=best_val_acc,
+                    expt=expt)
 net, train_loss, val_loss, val_acc, best_val_acc = trainer.train()
 
 if args.api_key:
@@ -118,7 +119,8 @@ new_trainer = KDTrainer(net,
                         epoch=hyper_params['num_epochs'],
                         savename=savename,
                         best_val_acc=best_val_acc,
-                        pruning=True) # set pruning as True to prune the gradients during optimization
+                        pruning=True,
+                        expt=expt) # set pruning as True to prune the gradients during optimization
 # !!! change pruning to false if it is not pruning task
 net, train_loss, val_loss, val_acc, best_val_acc = new_trainer.train()
 

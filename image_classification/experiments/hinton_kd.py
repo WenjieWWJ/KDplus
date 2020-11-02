@@ -81,7 +81,8 @@ trainer = KDTrainer(net,
                     hyper_params=hyper_params,
                     epoch=hyper_params['num_epochs'],
                     savename=savename,
-                    best_val_acc=best_val_acc)
+                    best_val_acc=best_val_acc,
+                    expt=expt)
 net, train_loss, val_loss, val_acc, best_val_acc = trainer.train()
 
 if args.api_key:
@@ -111,9 +112,10 @@ trainer_after_weightSharing = KDTrainer(net,
                                         loss_function2=None,
                                         optimizer=optimizer,
                                         hyper_params=hyper_params,
-                                        epoch=30,
+                                        epoch=hyper_params['num_epochs'],
                                         savename=savename,
-                                        best_val_acc=best_val_acc)
+                                        best_val_acc=best_val_acc,
+                                        expt=expt)
 net, train_loss, val_loss, val_acc, best_val_acc = trainer_after_weightSharing.train()
 net.load_state_dict(torch.load(savename))
 
