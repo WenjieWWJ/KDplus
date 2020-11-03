@@ -68,8 +68,8 @@ class KDTrainer:
                     TEMP = self.hyper_params['temperature']
                     ALPHA = self.hyper_params['alpha']
                     soft_targets = F.softmax(soft_targets/TEMP,dim=1)
-                    loss = loss_function(F.log_softmax(y_pred/TEMP,dim=1),soft_targets)*(1-ALPHA)*TEMP*TEMP
-                    loss += loss_function2(F.softmax(y_pred,dim=1),labels)*(ALPHA)
+                    loss = self.loss_function(F.log_softmax(y_pred/TEMP,dim=1),soft_targets)*(1-ALPHA)*TEMP*TEMP
+                    loss += self.loss_function2(F.softmax(y_pred,dim=1),labels)*(ALPHA)
 
                 elif self.loss_function2 is None:
                     if self.expt == 'fsp-kd':
@@ -89,7 +89,6 @@ class KDTrainer:
                     loss /= 5
                 # 2 loss functions and student and teacher are given -> simultaneous training
                 else:
-#                     labels = labels.float()
                     loss = self.loss_function(y_pred, labels)
                     for k in range(5):
                         loss += self.loss_function2(self.sf_student[k].features, self.sf_teacher[k].features)
