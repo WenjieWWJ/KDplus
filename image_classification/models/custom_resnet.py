@@ -53,6 +53,8 @@ class BasicBlock(nn.Module):
         self.downsample = downsample
         self.stride = stride
 
+        
+
     def forward(self, x):
         identity = x
 
@@ -147,12 +149,21 @@ class ResNet(nn.Module):
                                        dilate=replace_stride_with_dilation[1])
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
                                        dilate=replace_stride_with_dilation[2])
-        self.avgpool = AdaptiveConcatPool2d(1)
-        self.fc = nn.Linear(1024 * block.expansion, (1024 * block.expansion) // 4)
+        
+        # ! AdaptiveConcatPool2d (CAN NOT BE Quantized)
+        # self.avgpool = AdaptiveConcatPool2d(1)
+        # self.fc = nn.Linear(1024 * block.expansion, (1024 * block.expansion) // 4)
+        # self.relu2 = nn.ReLU(inplace=True)
+        # self.fc2 = nn.Linear((1024 * block.expansion) // 4, num_classes)
+
+
+        # ! AdaptiveAvgPool2d
+        self.avgpool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Linear(512 * block.expansion, (512 * block.expansion) // 4)
         # Used separate `self.relu2` so that forward hook can be registered uniquely
         self.relu2 = nn.ReLU(inplace=True)
-        self.fc2 = nn.Linear((1024 * block.expansion) // 4, num_classes)
-
+        self.fc2 = nn.Linear((512 * block.expansion) // 4, num_classes)
+       
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
@@ -194,7 +205,8 @@ class ResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x):
+    def _forward_impl(self, x):
+        # See note [TorchScript super()]
         x = self.conv1(x)
         x = self.bn1(x)
         # Used separate `self.relu2` so that forward hook can be registered uniquely
@@ -213,6 +225,9 @@ class ResNet(nn.Module):
         x = self.fc2(x)
 
         return x
+
+    def forward(self, x):
+        return self._forward_impl(x)
 
 
 def _resnet(arch, block, layers, pretrained, progress, **kwargs):

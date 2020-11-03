@@ -28,14 +28,14 @@ class KDTrainer:
         self.pruning = pruning
         self.expt = expt
 
-    def train(self):
+    def train(self, quartized=False, gpu=0):
         # to keep consistent with the original train  method
-        
+        print(f'train gpu:{gpu}')
         max_val_acc = self.best_val_acc
         for epoch in range(self.num_epoch):
             # to save time 
             loop = tqdm(self.data.train_dl)
-            gpu = self.hyper_params['gpu']
+            # gpu = self.hyper_params['gpu']
             self.student.train()
             self.student = self.student.to(gpu)
             if self.teacher is not None:
@@ -50,7 +50,12 @@ class KDTrainer:
                     images = torch.autograd.Variable(images).float()
                     labels = torch.autograd.Variable(labels)
 
+                if quartized:
+                    images = images.to('cpu')
+                    torch.quantize_per_tensor(images, scale=1e-3, zero_point=0, dtype=torch.quint8)
+
                 y_pred = self.student(images)
+                y_pred = y_pred.to('cuda')
                 if self.teacher is not None:
                     soft_targets = self.teacher(images)
 
@@ -65,7 +70,6 @@ class KDTrainer:
                     soft_targets = F.softmax(soft_targets/TEMP,dim=1)
                     loss = loss_function(F.log_softmax(y_pred/TEMP,dim=1),soft_targets)*(1-ALPHA)*TEMP*TEMP
                     loss += loss_function2(F.softmax(y_pred,dim=1),labels)*(ALPHA)
-
 
                 elif self.loss_function2 is None:
                     if self.expt == 'fsp-kd':
@@ -122,10 +126,10 @@ class KDTrainer:
                 loop.set_postfix(loss=loss.item())
 
             train_loss = (sum(trn) / len(trn))
-            val_loss, val_acc, max_val_acc = self.evaluate(max_val_acc, gpu)
+            val_loss, val_acc, max_val_acc = self.evaluate(max_val_acc, gpu, quartized)
         return self.student, train_loss, val_loss, val_acc, max_val_acc
 
-    def evaluate(self, max_val_acc=0, gpu='cpu'):
+    def evaluate(self, max_val_acc=0, gpu='cpu', quartized=False):
         self.student.eval()
         val = list()
         with torch.no_grad():
@@ -139,7 +143,11 @@ class KDTrainer:
                     images = torch.autograd.Variable(images).float()
                     labels = torch.autograd.Variable(labels)
 
+                if quartized:
+                    images = images.to('cpu')
+                    torch.quantize_per_tensor(images, scale=1e-3, zero_point=0,dtype=torch.quint8)
                 y_pred = self.student(images)
+                y_pred = y_pred.to('cuda')
                 if self.teacher is not None:
                     soft_targets = self.teacher(images)
 
@@ -232,10 +240,10 @@ class KDTrainer:
                 # edited by yujie
                 if quartized:
                     images = images.to('cpu')
-                    torch.quantize_per_tensor(images, scale=1e-3, zero_point=128,dtype=torch.quint8)
-
+                    torch.quantize_per_tensor(images, scale=1e-3, zero_point=0,dtype=torch.quint8)
                 y_pred = model(images)
                 loss_function = nn.CrossEntropyLoss()
+                y_pred = y_pred.to('cuda')
                 loss = loss_function(y_pred, labels)    # edited by yujie
                 y_pred = F.log_softmax(y_pred, dim = 1)
                 _, pred_ind = torch.max(y_pred, 1)
