@@ -1,6 +1,6 @@
 from comet_ml import Experiment
 from tqdm import tqdm
-
+import torch
 from fastai.vision import *
 ### added by Wenjie (Oct 19)
 import warnings
@@ -10,7 +10,7 @@ from image_classification.utils.utils import *
 
 class KDTrainer:
 
-    def __init__(self, student, teacher, data, sf_teacher, sf_student, loss_function, loss_function2, optimizer, hyper_params, epoch, savename, best_val_acc, pruning=False, expt=None):
+    def __init__(self, student, teacher, data, sf_teacher, sf_student, loss_function, loss_function2, optimizer, hyper_params, epoch, savename, best_val_acc, pruning=False, bits_weight_sharing=0, expt=None):
         self.student = student 
         self.teacher =  teacher
         self.data = data
@@ -26,6 +26,7 @@ class KDTrainer:
         self.savename = savename
         self.best_val_acc = best_val_acc
         self.pruning = pruning
+        self.bits_weight_sharing = bits_weight_sharing
         self.expt = expt
 
     def train(self, quartized=False, gpu=0):
@@ -121,6 +122,22 @@ class KDTrainer:
                         data_tensor = np.where(tensor_orig[name]==0, 0, tensor)
                         p.data = torch.from_numpy(data_tensor).to(gpu)
                 
+                ### added by yujie for retraining after weight sharing
+                if self.bits_weight_sharing:
+                    lr = 0.001
+                    for name,i in self.student.named_parameters():
+                        i.data[i.kmeans_result == -1] = 0 
+            #             print(i.data)
+            #             break
+                        if i.kmeans_result is None:
+                            continue
+                        for x in range(2 ** self.bits_weight_sharing):
+                            grad = torch.sum(i.grad.detach()[i.kmeans_result == x])
+            #                 print(grad.item())
+                            i.kmeans_label[x] += -lr * grad.item()
+                            i.data[i.kmeans_result == x] = i.kmeans_label[x].item()
+
+
                 loop.set_description('Epoch {}/{}'.format(epoch + 1, self.num_epoch))         # edited by yujie
                 loop.set_postfix(loss=loss.item())
 
