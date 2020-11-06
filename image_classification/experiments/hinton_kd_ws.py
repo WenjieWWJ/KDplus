@@ -83,7 +83,7 @@ trainer = KDTrainer(net,
                     savename=savename,
                     best_val_acc=best_val_acc,
                     expt=expt)
-net, train_loss, val_loss, val_acc, best_val_acc = trainer.train()
+net, train_loss, val_loss, val_acc, best_val_acc = trainer.train(gpu=args.gpu)
 
 if args.api_key:
     experiment.log_metric("train_loss", train_loss)
@@ -118,7 +118,7 @@ new_trainer = KDTrainer(net,
                         best_val_acc=best_val_acc,
                         bits_weight_sharing=args.bits_weight_sharing) 
 
-net, train_loss, val_loss, val_acc, best_val_acc = new_trainer.train()
+net, train_loss, val_loss, val_acc, best_val_acc = new_trainer.train(gpu=args.gpu)
 
 net.load_state_dict(torch.load(savename))
 net.eval()
