@@ -39,27 +39,72 @@ class Quartizer(BaseKDOp):
         return net
 
  
+# # edited by yujie
+# def apply_weight_sharing(model, bits=5):    
+
+#     for name, parameter in model.named_parameters():
+#         if 'conv' in name or 'fc.weight' in name or 'fc2.weight' in name:
+#             print('name:', name)
+#             print('parameters:', parameter.size())
+#             dev = parameter.device
+#             weight = parameter.data.cpu().numpy()
+#             shape = weight.shape
+#             print('shape:', shape)
+#             weight_scope = weight.reshape(-1)
+#             min_ = min(weight_scope)
+#             max_ = max(weight_scope)
+#             space = np.linspace(min_, max_, num=2**bits)
+#             kmeans = KMeans(n_clusters=len(space), init=space.reshape(-1,1), n_init=1, precompute_distances=True, algorithm="full")
+#             kmeans.fit(weight.reshape(-1,1))
+#             new_weight = kmeans.cluster_centers_[kmeans.labels_].reshape(-1)
+#             weight.data = new_weight
+#             parameter.data = torch.from_numpy(weight).to(dev)
+
 # edited by yujie
-def apply_weight_sharing(model, bits=5):    
+def apply_weight_sharing(model, bits=5):  
+
+    kmean_list = []
 
     for name, parameter in model.named_parameters():
-        if 'conv' in name or 'fc.weight' in name or 'fc2.weight' in name:
-            print('name:', name)
-            print('parameters:', parameter.size())
-            dev = parameter.device
-            weight = parameter.data.cpu().numpy()
-            shape = weight.shape
-            print('shape:', shape)
-            weight_scope = weight.reshape(-1)
-            min_ = min(weight_scope)
-            max_ = max(weight_scope)
-            space = np.linspace(min_, max_, num=2**bits)
-            kmeans = KMeans(n_clusters=len(space), init=space.reshape(-1,1), n_init=1, precompute_distances=True, algorithm="full")
-            kmeans.fit(weight.reshape(-1,1))
-            new_weight = kmeans.cluster_centers_[kmeans.labels_].reshape(-1)
-            weight.data = new_weight
-            parameter.data = torch.from_numpy(weight).to(dev)
-   
+        data = parameter.data.clone().view(-1).cpu().detach().numpy().reshape(-1)
+        data = data[data != 0]
+        if data.size < 2**bits: 
+            kmean_list.append(None)
+            continue
+        init = [x*(np.max(data)+np.min(data))/(2 ** bits) + np.min(data) for x in range(2 ** bits)]
+        kmn = KMeans(2 ** bits, init=np.array(init).reshape(2 ** bits, 1))
+        kmn.fit(data.reshape((-1,1)))        
+        kmean_list.append(kmn)
+        print(name,parameter.shape)
+
+
+    for i,(name,f) in enumerate(model.named_parameters()):
+        data = f.data.clone().view(-1).cpu().detach().numpy().reshape(-1)
+        data_nozero = data[data != 0].reshape((-1,1))
+        if data_nozero.size == 0 or data.size < 2 ** bits or kmean_list[i] is None:
+            f.kmeans_result = None
+            f.kmeans_label = None
+            continue
+    #     print(name)
+    #     print(data.size)
+    
+        result = data.copy()
+        result[result == 0] = -1
+        
+        print(data_nozero)
+        print(kmean_list[i])
+        label = kmean_list[i].predict(data_nozero).reshape(-1)
+        print(data_nozero)
+        print(label)
+        new_data = np.array([kmean_list[i].cluster_centers_[x] for x in label])
+        data[data != 0] = new_data.reshape(-1)
+        print(data,new_data)
+        f.data = torch.from_numpy(data).view(f.data.shape).cuda()
+        result[result != -1] = label
+        f.kmeans_result = torch.from_numpy(result).view(f.data.shape).cuda()
+        f.kmeans_label = torch.from_numpy(kmean_list[i].cluster_centers_).cuda()   
+
+
 # edited by wenjie
 def apply_pruning(model, prune_ratio):
     
