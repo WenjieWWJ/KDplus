@@ -91,14 +91,14 @@ def apply_weight_sharing(model, bits=5):
         result = data.copy()
         result[result == 0] = -1
         
-        print(data_nozero)
-        print(kmean_list[i])
+#         print(data_nozero)
+#         print(kmean_list[i])
         label = kmean_list[i].predict(data_nozero).reshape(-1)
-        print(data_nozero)
-        print(label)
+#         print(data_nozero)
+#         print(label)
         new_data = np.array([kmean_list[i].cluster_centers_[x] for x in label])
         data[data != 0] = new_data.reshape(-1)
-        print(data,new_data)
+#         print(data,new_data)
         f.data = torch.from_numpy(data).view(f.data.shape).cuda()
         result[result != -1] = label
         f.kmeans_result = torch.from_numpy(result).view(f.data.shape).cuda()
