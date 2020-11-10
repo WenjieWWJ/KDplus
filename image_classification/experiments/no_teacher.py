@@ -103,7 +103,7 @@ def eval_quantization():
                         savename=savename,
                         best_val_acc=0)
     val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
-    print(f"original net_0, val_loss: {val_loss}, val_acc: {val_acc} ")
+    print(f"original net_0 ----, size:: {kd_util.size_of_model(net)} MB val_loss: {val_loss}, val_acc: {val_acc} ")
 
     # # # # # ! static quartize Quartizer by fengbin
     qtz = Quartizer(trainer=trainer, qat=False)

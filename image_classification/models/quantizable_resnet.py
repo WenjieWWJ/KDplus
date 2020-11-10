@@ -7,7 +7,7 @@ from torch.quantization import QuantStub, DeQuantStub, fuse_modules
 from torch._jit_internal import Optional
 from .utils import _replace_relu, quantize_model
 
-__all__ = ['QuantizableResNet','resnet10','resnet14', 'resnet18','resnet20','resnet26', 'resnet50',
+__all__ = ['QuantizableResNet','resnet10','resnet14', 'resnet18','resnet20','resnet26','resnet34','resnet50',
            'resnext101_32x8d']
 
 
@@ -193,6 +193,17 @@ def resnet26(pretrained=False, progress=True, quantize=False, **kwargs):
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     return _resnet('resnet26', QuantizableBasicBlock, [3, 3, 3, 3], pretrained, progress,
+                   quantize, **kwargs)
+
+def resnet34(pretrained=False, progress=True, quantize=False, **kwargs):
+    r"""ResNet-34 model from
+    `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_
+
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return _resnet('resnet34', QuantizableBasicBlock, [3, 4, 6, 3], pretrained, progress,
                    quantize, **kwargs)
 
 def resnet50(pretrained=False, progress=True, quantize=False, **kwargs):
