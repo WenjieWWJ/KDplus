@@ -123,7 +123,7 @@ class KDTrainer:
                         p.data = torch.from_numpy(data_tensor).to(gpu)
                 
                 ### added by yujie for retraining after weight sharing
-                if self.bits_weight_sharing:
+                if self.bits_weight_sharing and (epoch%10)==0:
                     lr = 0.001
                     if self.expt == 'hinton-kd':
                         lr = 0.00001
