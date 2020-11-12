@@ -118,5 +118,5 @@ val_loss, val_acc = trainer.eval_model(model=net, quartized=False)
 print(f"net_2 after retraining net_1, val_loss: {val_loss}, val_acc: {val_acc} ")
 
 # for check 
-for name, parameter in net.named_parameters():
-    print(name,parameter)
+#for name, parameter in net.named_parameters():
+#   print(name,parameter)
