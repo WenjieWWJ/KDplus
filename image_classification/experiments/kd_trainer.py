@@ -126,9 +126,9 @@ class KDTrainer:
                 if self.bits_weight_sharing:
                     lr = 0.001
                     if self.expt == 'hinton-kd':
-                        lr = 0.0001
+                        lr = 0.00001
                     elif self.expt == 'no-teacher':
-                        lr = 0.0001
+                        lr = 0.00001
                     for name,i in self.student.named_parameters():
                         i.data[i.kmeans_result == -1] = 0 
             #             print(i.data)
