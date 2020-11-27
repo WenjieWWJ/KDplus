@@ -6,7 +6,10 @@ Deep compression is important for modern deep learning models in various industr
 
 ![pic](https://github.com/WenjieWWJ/KDplus/raw/master/pipeline.pdf)
 
-
+We tested the No-teacher, FitNets, and HintonKD with pruning, weight sharing, and quantization, respectively. 
+In addition, we also tried further compression: 
+1. KD+QAT+pruning;
+2. KD+pruning+weight sharing.
 
 ## Requirements
 - Install the dependencies using `conda` with the `requirements.yml` file
@@ -47,10 +50,6 @@ For detailed information on the various experiments, refer to the paper. In all 
 - Comet ML API key (`-a`) *(optional)* : If you want to use [Comet ML](https://www.comet.ml) for tracking your experiments, then either put your API key as the argument or make it the default argument in the `arguments.py` file. Otherwise, no need of using this argument.
 - Comet ML workspace (`-w`) *(optional)* : If you want to use [Comet ML](https://www.comet.ml) for tracking your experiments, then either put your workspace name as the argument or make it the default argument in the `arguments.py` file. Otherwise, no need of using this argument.
 
-We tested the No-teacher, FitNets, and HintonKD with pruning, weight sharing, and quantization, respectively. 
-In addition, we also tried futher compression: 
-1. KD+QAT+pruning;
-2. KD+pruning+weight sharing.
 
 In the following subsections, example commands for training are given for one experiment each.
 #### No Teacher
