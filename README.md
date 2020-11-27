@@ -1,12 +1,12 @@
-# [Pruning and Quantization Enhanced knowledge Distillation](./)
+# [Pruning and Quantization Enhanced knowledge Distillation](/CS6285_Project_Quantization_Enhanced_KD.pdf)
+
+CS6285 Project By Wenjie Wang, Fengbin Zhu, Yujie Zhang, and Yichen Zhou.
+
+Deep compression is important for modern deep learning models in various industrial applications. There are several different types of deep compression techniques that aim to reduce the size of the network and accelerate the model inference, such as Knowledge Distillation (KD), Pruning, and Quantization. However, existing works seldom study the combination of multiple different techniques. In this work, we aim to explore and verify the effectiveness of combining different KD methods with various compression techniques including pruning, weight sharing and quantization. We conducted comprehensive experiments for several compression pipelines with two or three compression steps on CIFAR10 with ResNets. We demonstrate that pruning and quantization enhanced KD can further compress the student model while maintaining the performance. Besides, KD methods perform differently when incorporating various compression techniques. The insights shed light on how to effectively incorporate various deep compression techniques when training deep learning models.
+
+![avatar](/pipeline.pdf)
 
 
-Deep compression is important for modern deep learning models in various industrial applications. There are several different types of deep compression
-techniques that aim to reduce the size of the network and accelerate the model inference, such as Knowledge Distillation (KD), Pruning, and Quantization.
-However, existing works seldom study the combination of multiple different techniques. In this work, we aim to explore and verify the effectiveness of
-combining different KD methods with various compression techniques including pruning, weight sharing and quantization. We conducted comprehensive
-experiments for several compression pipelines with two or three compression steps on CIFAR10 with ResNets. We demonstrate that pruning and quantization
-enhanced KD can further compress the student model while maintaining the performance. Besides, KD methods perform differently when incorporating various compression techniques. The insights shed light on how to effectively incorporate various deep compression techniques when training deep learning models.
 
 ## Requirements
 - Install the dependencies using `conda` with the `requirements.yml` file
@@ -47,6 +47,11 @@ For detailed information on the various experiments, refer to the paper. In all 
 - Comet ML API key (`-a`) *(optional)* : If you want to use [Comet ML](https://www.comet.ml) for tracking your experiments, then either put your API key as the argument or make it the default argument in the `arguments.py` file. Otherwise, no need of using this argument.
 - Comet ML workspace (`-w`) *(optional)* : If you want to use [Comet ML](https://www.comet.ml) for tracking your experiments, then either put your workspace name as the argument or make it the default argument in the `arguments.py` file. Otherwise, no need of using this argument.
 
+We tested the No-teacher, FitNets, and HintonKD with pruning, weight sharing, and quantization, respectively. 
+In addition, we also tried futher compression: 
+1. KD+QAT+pruning;
+2. KD+pruning+weight sharing.
+
 In the following subsections, example commands for training are given for one experiment each.
 #### No Teacher
 Full Imagenette dataset, ResNet10
@@ -65,6 +70,14 @@ Full CIFAR10 dataset, ResNet14
 ```
 python3 hinton_kd.py -d cifar10 -m resnet14 -e 100 -s 0
 ```
+
+#### FitNets with Prunning
+```
+python3 traditional_kd_pruning.py -d cifar10 -m resnet18 -p 20 -e 100 -s 0
+```
+
+More testing files can be found in ./image_classification/experiments/.
+
 
 ## Acknowledgment
 
