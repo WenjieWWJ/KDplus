@@ -4,7 +4,7 @@ CS6285 Project By Wenjie Wang, Fengbin Zhu, Yujie Zhang, and Yichen Zhou.
 
 Deep compression is important for modern deep learning models in various industrial applications. There are several different types of deep compression techniques that aim to reduce the size of the network and accelerate the model inference, such as Knowledge Distillation (KD), Pruning, and Quantization. However, existing works seldom study the combination of multiple different techniques. In this work, we aim to explore and verify the effectiveness of combining different KD methods with various compression techniques including pruning, weight sharing and quantization. We conducted comprehensive experiments for several compression pipelines with two or three compression steps on CIFAR10 with ResNets. We demonstrate that pruning and quantization enhanced KD can further compress the student model while maintaining the performance. Besides, KD methods perform differently when incorporating various compression techniques. The insights shed light on how to effectively incorporate various deep compression techniques when training deep learning models.
 
-![avatar](/pipeline.pdf)
+![pic](https://github.com/WenjieWWJ/KDplus/raw/master/pipeline.pdf)
 
 
 
